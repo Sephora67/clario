@@ -1,0 +1,48 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790263808538,
+      "tag": "0000_create_lessons",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790349621233,
+      "tag": "0001_illustration_library",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790367744518,
+      "tag": "0002_grant_illustration_library_access",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790367781765,
+      "tag": "0003_allow_complete_scenario_illustrations",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790377353130,
+      "tag": "0004_create_procedural_icon_visibility",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790388942346,
+      "tag": "0005_illustration_visual_description",
+      "breakpoints": true
+    }
+  ]
+}

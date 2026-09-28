@@ -1,0 +1,1 @@
+ALTER TABLE public.illustrations ADD COLUMN IF NOT EXISTS visual_description text;

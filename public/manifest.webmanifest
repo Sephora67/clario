@@ -1,0 +1,9 @@
+{
+  "name": "Clario — Cahier d'étude",
+  "short_name": "Clario",
+  "start_url": "/cahier",
+  "display": "standalone",
+  "background_color": "#fbf8fd",
+  "theme_color": "#f6ecc4",
+  "icons": [{ "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }]
+}

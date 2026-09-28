@@ -1,0 +1,2 @@
+ALTER TABLE public.illustrations DROP CONSTRAINT illustrations_category_check;
+ALTER TABLE public.illustrations ADD CONSTRAINT illustrations_category_check CHECK (category = ANY (ARRAY['character'::text, 'environment'::text, 'object'::text, 'scenario'::text]));
