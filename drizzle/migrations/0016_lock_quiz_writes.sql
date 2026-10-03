@@ -1,0 +1,1 @@
+REVOKE INSERT, UPDATE, DELETE ON public.page_quizzes FROM authenticated;

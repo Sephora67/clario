@@ -10,14 +10,32 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as CahierRouteImport } from './routes/cahier'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as LeconsRouteImport } from './routes/lecons'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as AuthenticatedBibliothequeRouteImport } from './routes/_authenticated/bibliotheque'
+import { Route as AuthenticatedCahierRouteImport } from './routes/_authenticated/cahier'
+import { Route as AuthenticatedCalendrierRouteImport } from './routes/_authenticated/calendrier'
+import { Route as AuthenticatedDossiersRouteImport } from './routes/_authenticated/dossiers'
+import { Route as AuthenticatedNotesRouteImport } from './routes/_authenticated/notes'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ApiReadSelectionRouteImport } from './routes/api/read-selection'
+import { Route as AuthenticatedCoursIndexRouteImport } from './routes/_authenticated/cours.index'
+import { Route as AuthenticatedCoursIdRouteImport } from './routes/_authenticated/cours.$id'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -30,9 +48,9 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CahierRoute = CahierRouteImport.update({
-  id: '/cahier',
-  path: '/cahier',
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LeconsRoute = LeconsRouteImport.update({
@@ -40,43 +58,213 @@ const LeconsRoute = LeconsRouteImport.update({
   path: '/lecons',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedBibliothequeRoute =
+  AuthenticatedBibliothequeRouteImport.update({
+    id: '/bibliotheque',
+    path: '/bibliotheque',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCahierRoute = AuthenticatedCahierRouteImport.update({
+  id: '/cahier',
+  path: '/cahier',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCalendrierRoute = AuthenticatedCalendrierRouteImport.update({
+  id: '/calendrier',
+  path: '/calendrier',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDossiersRoute = AuthenticatedDossiersRouteImport.update({
+  id: '/dossiers',
+  path: '/dossiers',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedNotesRoute = AuthenticatedNotesRouteImport.update({
+  id: '/notes',
+  path: '/notes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiReadSelectionRoute = ApiReadSelectionRouteImport.update({
+  id: '/api/read-selection',
+  path: '/api/read-selection',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedCoursIndexRoute = AuthenticatedCoursIndexRouteImport.update({
+  id: '/cours/',
+  path: '/cours/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCoursIdRoute = AuthenticatedCoursIdRouteImport.update({
+  id: '/cours/$id',
+  path: '/cours/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
-  '/cahier': typeof CahierRoute
+  '/contact': typeof ContactRoute
   '/lecons': typeof LeconsRoute
+  '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
+  '/bibliotheque': typeof AuthenticatedBibliothequeRoute
+  '/cahier': typeof AuthenticatedCahierRoute
+  '/calendrier': typeof AuthenticatedCalendrierRoute
+  '/dossiers': typeof AuthenticatedDossiersRoute
+  '/notes': typeof AuthenticatedNotesRoute
+  '/api/chat': typeof ApiChatRoute
+  '/api/read-selection': typeof ApiReadSelectionRoute
+  '/cours/$id': typeof AuthenticatedCoursIdRoute
+  '/cours/': typeof AuthenticatedCoursIndexRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
-  '/cahier': typeof CahierRoute
+  '/contact': typeof ContactRoute
   '/lecons': typeof LeconsRoute
+  '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
+  '/bibliotheque': typeof AuthenticatedBibliothequeRoute
+  '/cahier': typeof AuthenticatedCahierRoute
+  '/calendrier': typeof AuthenticatedCalendrierRoute
+  '/dossiers': typeof AuthenticatedDossiersRoute
+  '/notes': typeof AuthenticatedNotesRoute
+  '/api/chat': typeof ApiChatRoute
+  '/api/read-selection': typeof ApiReadSelectionRoute
+  '/cours/$id': typeof AuthenticatedCoursIdRoute
+  '/cours': typeof AuthenticatedCoursIndexRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
-  '/cahier': typeof CahierRoute
+  '/contact': typeof ContactRoute
   '/lecons': typeof LeconsRoute
+  '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
+  '/_authenticated/bibliotheque': typeof AuthenticatedBibliothequeRoute
+  '/_authenticated/cahier': typeof AuthenticatedCahierRoute
+  '/_authenticated/calendrier': typeof AuthenticatedCalendrierRoute
+  '/_authenticated/dossiers': typeof AuthenticatedDossiersRoute
+  '/_authenticated/notes': typeof AuthenticatedNotesRoute
+  '/api/chat': typeof ApiChatRoute
+  '/api/read-selection': typeof ApiReadSelectionRoute
+  '/_authenticated/cours/$id': typeof AuthenticatedCoursIdRoute
+  '/_authenticated/cours/': typeof AuthenticatedCoursIndexRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/auth' | '/cahier' | '/lecons'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/contact'
+    | '/lecons'
+    | '/pricing'
+    | '/privacy'
+    | '/terms'
+    | '/bibliotheque'
+    | '/cahier'
+    | '/calendrier'
+    | '/dossiers'
+    | '/notes'
+    | '/api/chat'
+    | '/api/read-selection'
+    | '/cours/$id'
+    | '/cours/'
+    | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/auth' | '/cahier' | '/lecons'
-  id: '__root__' | '/' | '/admin' | '/auth' | '/cahier' | '/lecons'
+  to:
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/contact'
+    | '/lecons'
+    | '/pricing'
+    | '/privacy'
+    | '/terms'
+    | '/bibliotheque'
+    | '/cahier'
+    | '/calendrier'
+    | '/dossiers'
+    | '/notes'
+    | '/api/chat'
+    | '/api/read-selection'
+    | '/cours/$id'
+    | '/cours'
+    | '/api/public/payments/webhook'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/admin'
+    | '/auth'
+    | '/contact'
+    | '/lecons'
+    | '/pricing'
+    | '/privacy'
+    | '/terms'
+    | '/_authenticated/bibliotheque'
+    | '/_authenticated/cahier'
+    | '/_authenticated/calendrier'
+    | '/_authenticated/dossiers'
+    | '/_authenticated/notes'
+    | '/api/chat'
+    | '/api/read-selection'
+    | '/_authenticated/cours/$id'
+    | '/_authenticated/cours/'
+    | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
-  CahierRoute: typeof CahierRoute
+  ContactRoute: typeof ContactRoute
   LeconsRoute: typeof LeconsRoute
+  PricingRoute: typeof PricingRoute
+  PrivacyRoute: typeof PrivacyRoute
+  TermsRoute: typeof TermsRoute
+  ApiChatRoute: typeof ApiChatRoute
+  ApiReadSelectionRoute: typeof ApiReadSelectionRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -86,6 +274,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -102,11 +297,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/cahier': {
-      id: '/cahier'
-      path: '/cahier'
-      fullPath: '/cahier'
-      preLoaderRoute: typeof CahierRouteImport
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lecons': {
@@ -116,15 +311,136 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LeconsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/bibliotheque': {
+      id: '/_authenticated/bibliotheque'
+      path: '/bibliotheque'
+      fullPath: '/bibliotheque'
+      preLoaderRoute: typeof AuthenticatedBibliothequeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cahier': {
+      id: '/_authenticated/cahier'
+      path: '/cahier'
+      fullPath: '/cahier'
+      preLoaderRoute: typeof AuthenticatedCahierRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/calendrier': {
+      id: '/_authenticated/calendrier'
+      path: '/calendrier'
+      fullPath: '/calendrier'
+      preLoaderRoute: typeof AuthenticatedCalendrierRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dossiers': {
+      id: '/_authenticated/dossiers'
+      path: '/dossiers'
+      fullPath: '/dossiers'
+      preLoaderRoute: typeof AuthenticatedDossiersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/notes': {
+      id: '/_authenticated/notes'
+      path: '/notes'
+      fullPath: '/notes'
+      preLoaderRoute: typeof AuthenticatedNotesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/read-selection': {
+      id: '/api/read-selection'
+      path: '/api/read-selection'
+      fullPath: '/api/read-selection'
+      preLoaderRoute: typeof ApiReadSelectionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/cours/': {
+      id: '/_authenticated/cours/'
+      path: '/cours'
+      fullPath: '/cours/'
+      preLoaderRoute: typeof AuthenticatedCoursIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cours/$id': {
+      id: '/_authenticated/cours/$id'
+      path: '/cours/$id'
+      fullPath: '/cours/$id'
+      preLoaderRoute: typeof AuthenticatedCoursIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedBibliothequeRoute: typeof AuthenticatedBibliothequeRoute
+  AuthenticatedCahierRoute: typeof AuthenticatedCahierRoute
+  AuthenticatedCalendrierRoute: typeof AuthenticatedCalendrierRoute
+  AuthenticatedDossiersRoute: typeof AuthenticatedDossiersRoute
+  AuthenticatedNotesRoute: typeof AuthenticatedNotesRoute
+  AuthenticatedCoursIdRoute: typeof AuthenticatedCoursIdRoute
+  AuthenticatedCoursIndexRoute: typeof AuthenticatedCoursIndexRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedBibliothequeRoute: AuthenticatedBibliothequeRoute,
+  AuthenticatedCahierRoute: AuthenticatedCahierRoute,
+  AuthenticatedCalendrierRoute: AuthenticatedCalendrierRoute,
+  AuthenticatedDossiersRoute: AuthenticatedDossiersRoute,
+  AuthenticatedNotesRoute: AuthenticatedNotesRoute,
+  AuthenticatedCoursIdRoute: AuthenticatedCoursIdRoute,
+  AuthenticatedCoursIndexRoute: AuthenticatedCoursIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
-  CahierRoute: CahierRoute,
+  ContactRoute: ContactRoute,
   LeconsRoute: LeconsRoute,
+  PricingRoute: PricingRoute,
+  PrivacyRoute: PrivacyRoute,
+  TermsRoute: TermsRoute,
+  ApiChatRoute: ApiChatRoute,
+  ApiReadSelectionRoute: ApiReadSelectionRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

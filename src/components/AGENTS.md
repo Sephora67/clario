@@ -1,0 +1,4 @@
+- Notebook annotations use separate committed and live-stroke canvases so stylus events don't repaint saved marks.
+- Notebook marks/bookmarks/rotations save as one `documents.state` jsonb, debounced ~1.2s, flushed on page hide.
+- Notebook title is a recent-documents dropdown (5 PDFs/images) to switch without leaving the cahier.
+- Explainer visuals use exact narration anchors mapped onto detected speech segments so reveals stay aligned.

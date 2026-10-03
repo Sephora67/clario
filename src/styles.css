@@ -1,8 +1,15 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import "katex/dist/katex.min.css";
 
 @custom-variant dark (&:is(.dark *));
+
+@media (display-mode: standalone) {
+  .browser-home-link {
+    display: none;
+  }
+}
 
 /*
  * Design system definition.
@@ -440,3 +447,9 @@
 /* Board items step aside while the outro teacher celebrates */
 .wb-item-gone { opacity: 0; transform: translate(-50%, -50%) scale(0.9); transition: opacity 0.4s ease, transform 0.4s ease; pointer-events: none; }
 
+
+@keyframes showcase-float { 0%,100% { translate: 0 0; } 50% { translate: 0 -8px; } }
+.showcase-float { animation: showcase-float 6s ease-in-out infinite; }
+@keyframes showcase-pulse { 0%,100% { opacity: .2; } 50% { opacity: 1; } }
+.showcase-pulse { animation: showcase-pulse 1.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .showcase-float, .showcase-pulse { animation: none; } }

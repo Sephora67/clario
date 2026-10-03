@@ -3,6 +3,7 @@ import { PROCEDURAL_ICON_CATALOG } from "@/lib/procedural-icon-catalog";
 import { proceduralGraphic } from "@/lib/procedural-icon-renderer";
 import type { Board, BoardElement } from "@/lib/lesson-types";
 import { cn } from "@/lib/utils";
+import { MathFormula } from "@/components/math-formula";
 import { TeacherHost } from "./teacher-host";
 import { resolveCharacter } from "@/lib/character-catalog";
 
@@ -301,7 +302,7 @@ function Item({ p, tone, gone }: { p: Placed; tone: number; gone?: boolean }) {
 
 
         <div className={cn("wb-pop rounded-[1.2cqw] border-[0.25cqw] px-[1.2cqw] py-[1cqw]", t.border, t.soft)}>
-          <p className="wb-write font-hand text-[2.8cqw] font-bold leading-tight" style={{ animationDelay: "0.15s" }}>{p.el.text}</p>
+          <MathFormula value={p.el.text} className="wb-write text-[2.8cqw] font-bold leading-tight" />
         </div>
       </div>
     );

@@ -1,3 +1,4 @@
+import { tf } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import teacherThumbs from "@/assets/teacher-thumbs.png.asset.json";
 import teacherWelcome from "@/assets/teacher-welcome.png.asset.json";
@@ -8,7 +9,7 @@ export function TeacherHost({ pose, text, gone }: { pose: "wave" | "thumbs"; tex
       <div className="wb-host text-center">
         <img
           src={pose === "wave" ? teacherWelcome.url : teacherThumbs.url}
-          alt={pose === "wave" ? "Professeure Clario souhaitant la bienvenue" : "Professeure Clario félicitant avec un pouce levé"}
+          alt={pose === "wave" ? tf("Professeure Clario souhaitant la bienvenue") : tf("Professeure Clario félicitant avec un pouce levé")}
           className={cn("wb-host-image mx-auto h-auto w-full object-contain", pose === "wave" ? "wb-host-welcome" : "wb-host-thumbs")}
         />
         {text && (

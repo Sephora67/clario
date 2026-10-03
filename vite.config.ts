@@ -5,11 +5,41 @@
 //     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+  },
+  vite: {
+    plugins: [
+      VitePWA({
+        strategies: "generateSW",
+        registerType: "autoUpdate",
+        injectRegister: null,
+        manifest: false,
+        filename: "sw.js",
+        devOptions: { enabled: false },
+        workbox: {
+          globPatterns: ["**/*.{js,css,woff2,png,svg,jpg,webp}"],
+          maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
+          navigateFallback: null,
+          runtimeCaching: [
+            {
+              urlPattern: ({ request, url }) => request.mode === "navigate" && !url.pathname.startsWith("/~oauth") && !url.pathname.startsWith("/api/"),
+              handler: "NetworkFirst",
+              options: { cacheName: "clario-pages", networkTimeoutSeconds: 4 },
+            },
+            {
+              urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith("/assets/"),
+              handler: "CacheFirst",
+              options: { cacheName: "clario-assets", expiration: { maxEntries: 300 } },
+            },
+          ],
+        },
+      }),
+    ],
   },
 });

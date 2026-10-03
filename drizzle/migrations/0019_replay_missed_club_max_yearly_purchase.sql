@@ -1,0 +1,1 @@
+SELECT public.apply_purchase('dfd83c89-414c-45f7-8624-6bb718b6a0ab'::uuid,'sandbox','txn_01m3zc5ggd26ecvasbyzpzkvr5','pro_club_max_yearly',11999,false);

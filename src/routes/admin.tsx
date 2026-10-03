@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Inbox, Ticket, Users, UserCog, Archive } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { catalog, FR, ILLUS_ENVIRONMENTS, ILLUS_OBJECTS, ILLUS_ROLES, SCENARIO_SUBS, type CatalogItem } from "@/lib/illustration-catalog";
 import { PROCEDURAL_ICON_CATALOG, PROCEDURAL_ICON_GROUPS, type ProceduralIconEntry } from "@/lib/procedural-icon-catalog";
@@ -11,21 +13,31 @@ import { listHiddenProceduralIcons, setProceduralIconHidden } from "@/lib/proced
 import { listHiddenScenarios, setScenarioHidden } from "@/lib/scenario-visibility.functions";
 import { SCENARIO_CLUSTERS, scenarioNumber } from "@/lib/scenario-clusters";
 import { amIAdmin, generateIllustration, listIllustrationHistory, listIllustrations, restoreIllustration, setIllustrationStatus, detectVisualContent, saveVisualDescription } from "@/lib/illustrations.functions";
+import { listSupportMessages, setSupportMessageStatus, deleteSupportMessage } from "@/lib/support.functions";
+import { myStaffRole, adminFindUser, adminAdjustCredits, adminListTeam, adminSetRole, type StaffRole } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Bibliothèque d'illustrations — Clario" },
-      { name: "description", content: "Espace privé pour prévisualiser et approuver les illustrations de Clario." },
-      { property: "og:title", content: "Bibliothèque d'illustrations — Clario" },
-      { property: "og:description", content: "Espace administrateur des illustrations." },
+      { title: "Administration Clario" },
+      { name: "description", content: "Espace réservé à l'équipe Clario : tickets, utilisateurs, crédits et archives graphiques." },
+      { property: "og:title", content: "Administration Clario" },
+      { property: "og:description", content: "Espace administrateur Clario." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: AdminLibrary,
+  component: AdminHome,
 });
+
+const STAFF_TABS = [
+  { id: "tickets", label: "Tickets & Support", icon: Ticket, roles: ["admin", "support"] },
+  { id: "users", label: "Utilisateurs & Crédits", icon: Users, roles: ["admin"] },
+  { id: "team", label: "Équipe & Rôles", icon: UserCog, roles: ["admin"] },
+  { id: "archive", label: "Archives graphiques", icon: Archive, roles: ["admin"] },
+] as const;
+type StaffTab = (typeof STAFF_TABS)[number]["id"];
 
 type Row = { key: string; status: string; svg: string | null; custom_prompt: string | null; visual_description?: string | null };
 const TABS = [
@@ -34,6 +46,7 @@ const TABS = [
   { id: "environment", label: "Lieux" },
   { id: "object", label: "Objets" },
   { id: "icons", label: "Icônes (gratuites)" },
+  { id: "support", label: "Messages & Support" },
 ] as const;
 const SUBS: Record<string, readonly string[]> = { scenario: SCENARIO_SUBS, character: ILLUS_ROLES, environment: ILLUS_ENVIRONMENTS, object: ILLUS_OBJECTS, icons: [] };
 
@@ -135,6 +148,204 @@ const STATUS_FILTERS = [
   { id: "approved", label: "Approuvés" },
   { id: "rejected", label: "Refusés" },
 ] as const;
+
+function AdminHome() {
+  const { user, loading } = useAuth();
+  const checkStaff = useServerFn(myStaffRole);
+  const [staffRole, setStaffRole] = useState<StaffRole | null>(null);
+  const [staffLoading, setStaffLoading] = useState(true);
+  const [tab, setTab] = useState<StaffTab>("tickets");
+  useEffect(() => {
+    if (!user) { setStaffLoading(false); return; }
+    checkStaff().then((r) => setStaffRole(r.role)).catch(() => setStaffRole(null)).finally(() => setStaffLoading(false));
+  }, [user]);
+
+  if (loading || (user && staffLoading)) return <Shell><p className="text-muted-foreground">Chargement…</p></Shell>;
+  if (!user) return <Shell><p>Connecte-toi pour accéder à cet espace. <Link to="/auth" className="underline">Connexion</Link></p></Shell>;
+  if (!staffRole) return <Shell><p>Cet espace est réservé à l'équipe Clario.</p></Shell>;
+  const tabs = STAFF_TABS.filter((t) => (t.roles as readonly string[]).includes(staffRole));
+
+  return (
+    <Shell>
+      <div className="flex flex-wrap items-center gap-2">
+        {tabs.map((t) => {
+          const Icon = t.icon;
+          return (
+            <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm ${tab === t.id ? "bg-primary text-primary-foreground" : "bg-card"}`}>
+              <Icon className="size-4" />{t.label}
+            </button>
+          );
+        })}
+      </div>
+      {tab === "tickets" && <SupportInbox />}
+      {tab === "users" && <UsersPanel />}
+      {tab === "team" && <TeamPanel />}
+      {tab === "archive" && <AdminLibrary />}
+    </Shell>
+  );
+}
+
+function UsersPanel() {
+  const findUser = useServerFn(adminFindUser);
+  const adjust = useServerFn(adminAdjustCredits);
+  const [email, setEmail] = useState("");
+  const [data, setData] = useState<Awaited<ReturnType<typeof findUser>> | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [dq, setDq] = useState("100");
+  const [dv, setDv] = useState("0");
+  const [reason, setReason] = useState("");
+
+  const search = async () => {
+    setBusy(true); setError(null); setData(null);
+    try { setData(await findUser({ data: { email: email.trim() } })); }
+    catch (e) { setError(e instanceof Error ? e.message : "Erreur inconnue."); }
+    finally { setBusy(false); }
+  };
+  const applyAdjust = async () => {
+    if (!data?.user) return;
+    setBusy(true); setError(null);
+    try {
+      const next = await adjust({ data: { userId: data.user.id, questions: parseInt(dq, 10) || 0, videos: parseInt(dv, 10) || 0, reason: reason.trim() || "Ajustement manuel" } });
+      toast.success(`Crédits mis à jour : ${next.questions} questions · ${next.videos} vidéos.`);
+      setData({ ...data, credits: { ...data.credits!, questions: next.questions, videos: next.videos }, adjustments: [{ questions_delta: parseInt(dq, 10) || 0, videos_delta: parseInt(dv, 10) || 0, reason: reason.trim() || "Ajustement manuel", created_at: new Date().toISOString() }, ...(data.adjustments ?? [])] });
+      setReason("");
+    } catch (e) { setError(e instanceof Error ? e.message : "Erreur inconnue."); }
+    finally { setBusy(false); }
+  };
+
+  const c = data?.credits;
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2">
+        <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="client@exemple.com" type="email" onKeyDown={(e) => e.key === "Enter" && void search()} className="max-w-sm" />
+        <Button disabled={busy || !email.trim()} onClick={() => void search()}>Rechercher</Button>
+      </div>
+      {error && <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
+      {data && !data.user && <p className="text-sm text-muted-foreground">Aucun compte Clario avec cet e-mail.</p>}
+      {data?.user && (
+        <div className="space-y-4">
+          <div className="rounded-2xl border bg-card p-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="font-medium">{data.user.name || "Étudiant"}</p>
+              <span className="text-sm text-muted-foreground">{data.user.email}</span>
+              <span className="ml-auto text-xs text-muted-foreground">Inscrit le {new Date(data.user.createdAt).toLocaleDateString("fr-CA")}</span>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2 text-sm">
+              <span className="rounded-full bg-school-yellow-soft px-3 py-1 font-medium">💬 {c?.questions ?? 0} questions</span>
+              <span className="rounded-full bg-school-purple-soft px-3 py-1 font-medium">🎬 {c?.videos ?? 0} vidéos</span>
+              {c?.has_pass && <span className="rounded-full bg-secondary px-3 py-1">Pass</span>}
+              <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">Utilisé ce mois : {c?.questions_used ?? 0} Q · {c?.videos_used ?? 0} V</span>
+            </div>
+          </div>
+          <div className="rounded-2xl border bg-card p-4">
+            <p className="text-sm font-semibold">Abonnements</p>
+            {data.subscriptions.length === 0 && <p className="mt-1 text-sm text-muted-foreground">Aucun abonnement.</p>}
+            {data.subscriptions.map((s, i) => (
+              <div key={i} className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+                <span className="rounded-full bg-secondary px-2 py-0.5 text-xs">{s.environment}</span>
+                <span className="font-medium">{s.price_id}</span>
+                <span>{s.status}</span>
+                {s.current_period_end && <span className="text-xs text-muted-foreground">jusqu'au {new Date(s.current_period_end).toLocaleDateString("fr-CA")}</span>}
+              </div>
+            ))}
+            <p className="mt-3 text-sm font-semibold">Achats récents</p>
+            {data.purchases.length === 0 && <p className="mt-1 text-sm text-muted-foreground">Aucun achat.</p>}
+            {data.purchases.map((p, i) => (
+              <div key={i} className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">{p.price_id}</span>
+                <span>{(p.amount_cents / 100).toFixed(2)} $</span>
+                <span>{p.environment}</span>
+                <span className="truncate">{p.paddle_transaction_id}</span>
+                <span>{new Date(p.created_at).toLocaleDateString("fr-CA")}</span>
+              </div>
+            ))}
+            <p className="mt-3 text-xs text-muted-foreground">Remboursement d'argent : ouvre le portail de paiement avec l'identifiant client ci-dessous, onglet Transactions → Rembourser.</p>
+            {data.subscriptions[0]?.paddle_customer_id && <code className="mt-1 block rounded bg-muted px-2 py-1 text-xs">{data.subscriptions[0].paddle_customer_id}</code>}
+          </div>
+          <div className="rounded-2xl border bg-card p-4">
+            <p className="text-sm font-semibold">Ajuster les crédits</p>
+            <p className="mt-1 text-xs text-muted-foreground">Négatif pour retirer (ex. rembourser des crédits après un incident).</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Input value={dq} onChange={(e) => setDq(e.target.value)} type="number" className="w-24" aria-label="Questions" />
+              <Input value={dv} onChange={(e) => setDv(e.target.value)} type="number" className="w-24" aria-label="Vidéos" />
+              <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Raison (ex. geste commercial, remboursement)" className="min-w-52 flex-1" maxLength={300} />
+              <Button disabled={busy} onClick={() => void applyAdjust()}>Appliquer</Button>
+            </div>
+            {data.adjustments.length > 0 && (
+              <div className="mt-3 space-y-1">
+                <p className="text-xs text-muted-foreground">Historique des ajustements</p>
+                {data.adjustments.map((a, i) => (
+                  <p key={i} className="text-xs text-muted-foreground">{new Date(a.created_at).toLocaleString("fr-CA")} · {a.questions_delta >= 0 ? `+${a.questions_delta}` : a.questions_delta} Q · {a.videos_delta >= 0 ? `+${a.videos_delta}` : a.videos_delta} V · {a.reason}</p>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TeamPanel() {
+  const listTeam = useServerFn(adminListTeam);
+  const saveRole = useServerFn(adminSetRole);
+  const [rows, setRows] = useState<{ userId: string; role: "admin" | "support"; email: string; me: boolean }[] | null>(null);
+  const [email, setEmail] = useState("");
+  const [role, setRolePick] = useState<"admin" | "support">("support");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const refresh = async () => {
+    try { setRows(await listTeam()); } catch (e) { setError(e instanceof Error ? e.message : "Erreur inconnue."); }
+  };
+  useEffect(() => { void refresh(); }, []);
+  const change = async (grant: boolean, r?: "admin" | "support", targetEmail?: string) => {
+    setBusy(true); setError(null);
+    try {
+      await saveRole({ data: { email: targetEmail ?? email.trim(), role: r ?? role, grant } });
+      toast.success(grant ? "Accès accordé." : "Accès retiré.");
+      setEmail("");
+      await refresh();
+    } catch (e) { setError(e instanceof Error ? e.message : "Erreur inconnue."); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-2xl border bg-card p-4">
+        <p className="text-sm font-semibold">Ajouter ou modifier un accès</p>
+        <p className="mt-1 text-xs text-muted-foreground">La personne doit déjà avoir un compte Clario. « Support » voit uniquement les tickets.</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <Input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="employe@clario.app" className="max-w-xs" />
+          <div className="flex rounded-md border p-0.5">
+            {(["support", "admin"] as const).map((r) => (
+              <button key={r} type="button" onClick={() => setRolePick(r)} className={`rounded px-3 py-1 text-sm font-semibold ${role === r ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>{r === "support" ? "Support" : "Admin"}</button>
+            ))}
+          </div>
+          <Button disabled={busy || !email.trim()} onClick={() => void change(true)}>Accorder</Button>
+        </div>
+      </div>
+      {error && <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
+      <div className="space-y-2">
+        {rows === null && <p className="text-sm text-muted-foreground">Chargement…</p>}
+        {rows?.length === 0 && <p className="text-sm text-muted-foreground">Aucun membre d'équipe pour l'instant.</p>}
+        {rows?.map((r) => (
+          <div key={r.userId + r.role} className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-3">
+            <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold">{r.role === "admin" ? "Admin" : "Support"}</span>
+            <span className="text-sm">{r.email}</span>
+            {r.me && <span className="text-xs text-muted-foreground">(toi)</span>}
+            {!r.me && (
+              <button disabled={busy} onClick={() => void change(false, r.role, r.email)} className="ml-auto rounded-full border px-3 py-1 text-xs disabled:opacity-50">
+                Retirer
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function AdminLibrary() {
   const { user, loading } = useAuth();
@@ -338,7 +549,7 @@ function AdminLibrary() {
   if (!admin) return <Shell><p>Cet espace est réservé à l'administratrice.</p></Shell>;
 
   return (
-    <Shell>
+    <>
       <p className="text-sm text-muted-foreground">
         {all.length} illustrations prévues · {counts.drawn} dessinées · {counts.approved} approuvées. Chaque dessin coûte environ 0,08 $ sur Recraft, une seule fois.
       </p>
@@ -346,9 +557,9 @@ function AdminLibrary() {
         {TABS.map((t) => (
           <button key={t.id} onClick={() => { setTab(t.id); setSub("all"); }} className={`rounded-full border px-4 py-1.5 text-sm ${tab === t.id ? "bg-primary text-primary-foreground" : "bg-card"}`}>{t.label}</button>
         ))}
-        <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Rechercher…" className="ml-auto rounded-full border bg-card px-4 py-1.5 text-sm" />
+        <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Rechercher…" className={`ml-auto rounded-full border bg-card px-4 py-1.5 text-sm ${tab === "support" ? "hidden" : ""}`} />
       </div>
-      {tab === "icons" ? <IconGallery filter={filter} /> : (<>
+      {tab === "support" ? <SupportInbox /> : tab === "icons" ? <IconGallery filter={filter} /> : (<>
       <div className="flex flex-wrap items-center gap-2">
         <button onClick={() => setSub("all")} className={`rounded-full border px-3 py-1 text-xs ${sub === "all" ? "bg-accent text-accent-foreground" : "bg-card"}`}>Tous</button>
         {tab === "scenario" && (
@@ -394,7 +605,77 @@ function AdminLibrary() {
       </div>
       )}
       </>)}
-    </Shell>
+    </>
+  );
+}
+
+type SupportRow = { id: string; user_email: string; user_name: string; document_name: string; question: string; context: string; status: string; created_at: string };
+
+function SupportInbox() {
+  const list = useServerFn(listSupportMessages);
+  const mark = useServerFn(setSupportMessageStatus);
+  const remove = useServerFn(deleteSupportMessage);
+  const [rows, setRows] = useState<SupportRow[] | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    list().then((r) => setRows(r as SupportRow[])).catch((e) => setError(e instanceof Error ? e.message : "Impossible de charger les messages."));
+  }, []);
+
+  async function changeStatus(id: string, status: "nouveau" | "traite") {
+    setBusyId(id); setError(null);
+    try {
+      await mark({ data: { id, status } });
+      setRows((s) => (s ?? []).map((r) => (r.id === id ? { ...r, status } : r)));
+    } catch (e) { setError(e instanceof Error ? e.message : "Erreur inconnue."); }
+    finally { setBusyId(null); }
+  }
+
+  async function del(id: string) {
+    setBusyId(id); setError(null);
+    try {
+      await remove({ data: { id } });
+      setRows((s) => (s ?? []).filter((r) => r.id !== id));
+    } catch (e) { setError(e instanceof Error ? e.message : "Erreur inconnue."); }
+    finally { setBusyId(null); }
+  }
+
+  const unread = rows?.filter((r) => r.status !== "traite").length ?? 0;
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        {rows === null ? "Chargement…" : `${rows.length} message(s) reçu(s) · ${unread} en attente. Les questions sur l'application que les étudiants choisissent de te transmettre arrivent ici.`}
+      </p>
+      {error && <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
+      {rows?.length === 0 && (
+        <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed p-8 text-center">
+          <Inbox className="size-8 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Aucun message pour l'instant. Quand un étudiant demande à Clario de transmettre une question sur l'appli, elle apparaît ici.</p>
+        </div>
+      )}
+      {rows?.map((r) => (
+        <div key={r.id} className={`space-y-2 rounded-2xl border bg-card p-4 ${r.status === "traite" ? "opacity-60" : ""}`}>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${r.status === "traite" ? "bg-secondary text-secondary-foreground" : "bg-primary text-primary-foreground"}`}>
+              {r.status === "traite" ? "Traitée" : "Nouveau"}
+            </span>
+            <span className="text-sm font-medium">{r.user_name || "Étudiant"}</span>
+            {r.user_email && <a href={`mailto:${r.user_email}`} className="text-xs underline">{r.user_email}</a>}
+            <span className="ml-auto text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString("fr-CA")}</span>
+          </div>
+          <p className="whitespace-pre-wrap text-sm">{r.question}</p>
+          {r.document_name && <p className="text-xs text-muted-foreground">Document : « {r.document_name} »</p>}
+          {r.context && <details className="text-xs text-muted-foreground"><summary className="cursor-pointer">Contexte de la conversation</summary><p className="mt-1 whitespace-pre-wrap">{r.context}</p></details>}
+          <div className="flex flex-wrap gap-1">
+            {r.status === "traite"
+              ? <button disabled={busyId === r.id} onClick={() => changeStatus(r.id, "nouveau")} className="rounded-full border px-3 py-1 text-xs disabled:opacity-50">Réouvrir</button>
+              : <button disabled={busyId === r.id} onClick={() => changeStatus(r.id, "traite")} className="rounded-full bg-primary px-3 py-1 text-xs text-primary-foreground disabled:opacity-50">Marquer traitée</button>}
+            <button disabled={busyId === r.id} onClick={() => del(r.id)} className="rounded-full border px-3 py-1 text-xs disabled:opacity-50">Supprimer</button>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -402,7 +683,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <main className="mx-auto max-w-6xl space-y-5 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Bibliothèque d'illustrations</h1>
+        <h1 className="text-2xl font-semibold">Administration Clario</h1>
         <Link to="/" className="text-sm underline">Retour à Clario</Link>
       </div>
       {children}

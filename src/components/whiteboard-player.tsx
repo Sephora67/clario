@@ -1,5 +1,7 @@
+import { tf } from "@/lib/i18n";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Maximize2, Pause, Play, RotateCcw, RotateCw, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react";
+import { Maximize2, Minimize2, Pause, Play, RotateCcw, RotateCw, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { WhiteboardBoard } from "@/components/whiteboard-board";
 import type { LessonScene } from "@/lib/lesson-types";
@@ -28,6 +30,9 @@ export function WhiteboardPlayer({ scenes, captionsOn = true, onSceneChange, con
   const [t, setT] = useState(0);
   const [durations, setDurations] = useState<number[]>(() => scenes.map(() => FALLBACK_SECONDS));
   const [speech, setSpeech] = useState<Record<number, Speech | null>>({});
+  // Plein écran maison en CSS : l'API navigateur affiche une barre d'adresse Android
+  // (« Pour quitter le mode Plein écran… ») qu'on ne veut jamais montrer.
+  const [full, setFull] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const holdRef = useRef<number | undefined>(undefined);
@@ -176,14 +181,14 @@ export function WhiteboardPlayer({ scenes, captionsOn = true, onSceneChange, con
   };
 
   return (
-    <div ref={containerRef} className="overflow-hidden rounded-2xl border bg-card shadow-xl">
+    <div ref={containerRef} className={cn("overflow-hidden border bg-card shadow-xl", full ? "fixed inset-0 z-50 flex flex-col rounded-none" : "rounded-2xl")}>
       <div className="wb-root relative aspect-video overflow-hidden bg-whiteboard">
         <div key={index} className="board-enter absolute inset-0">
           {scene.board ? (
             <WhiteboardBoard board={scene.board} visible={visible} paused={!playing} />
           ) : scene.image ? (
             <>
-              <img src={scene.image} alt={`Tableau blanc : ${scene.title}`} className="absolute inset-0 size-full object-cover" />
+              <img src={scene.image} alt={tf("Tableau blanc : {0}", [scene.title])} className="absolute inset-0 size-full object-cover" />
               <div className="absolute left-[3%] top-[3%] rounded-lg bg-whiteboard/85 px-2 py-0.5 font-hand text-sm font-bold text-whiteboard-ink sm:text-2xl">{index + 1}. {scene.title}</div>
             </>
           ) : (
@@ -191,7 +196,7 @@ export function WhiteboardPlayer({ scenes, captionsOn = true, onSceneChange, con
           )}
         </div>
         {!playing && !started && (
-          <button onClick={() => { setPlaying(true); setStarted(true); }} className="absolute inset-0 z-30 grid place-items-center bg-foreground/10" aria-label="Lancer la leçon">
+          <button onClick={() => { setPlaying(true); setStarted(true); }} className="absolute inset-0 z-30 grid place-items-center bg-foreground/10" aria-label={tf("Lancer la leçon")}>
             <span className="grid size-16 place-items-center rounded-full bg-primary text-primary-foreground shadow-xl sm:size-20"><Play className="ml-1 size-8" /></span>
           </button>
         )}
@@ -211,16 +216,16 @@ export function WhiteboardPlayer({ scenes, captionsOn = true, onSceneChange, con
           {durations.slice(0, -1).map((_, i) => { const at = durations.slice(0, i + 1).reduce((s, v) => s + v, 0); return <span key={i} className="absolute top-0 h-full w-0.5 bg-player" style={{ left: `${(at / total) * 100}%` }} />; })}
         </div>
         <div className="flex items-center gap-1 sm:gap-2">
-          <Button size="icon" variant="ghost" onClick={() => goTo(index - 1)} aria-label="Scène précédente" className="text-player-foreground hover:bg-player-muted"><SkipBack /></Button>
-          <Button size="icon" variant="ghost" onClick={() => skip(-10)} aria-label="Reculer de 10 secondes" className="text-player-foreground hover:bg-player-muted"><RotateCcw /></Button>
-          <Button size="icon" variant="ghost" onClick={() => { setPlaying(!playing); setStarted(true); }} aria-label={playing ? "Pause" : "Lecture"} className="text-player-foreground hover:bg-player-muted">{playing ? <Pause /> : <Play />}</Button>
-          <Button size="icon" variant="ghost" onClick={() => skip(10)} aria-label="Avancer de 10 secondes" className="text-player-foreground hover:bg-player-muted"><RotateCw /></Button>
-          <Button size="icon" variant="ghost" onClick={() => goTo(index + 1)} aria-label="Scène suivante" className="text-player-foreground hover:bg-player-muted"><SkipForward /></Button>
-          <Button size="icon" variant="ghost" onClick={() => { setMuted(!muted); if (audioRef.current) audioRef.current.muted = !muted; }} aria-label={muted ? "Activer le son" : "Couper le son"} className="text-player-foreground hover:bg-player-muted">{muted ? <VolumeX /> : <Volume2 />}</Button>
+          <Button size="icon" variant="ghost" onClick={() => goTo(index - 1)} aria-label={tf("Scène précédente")} className="text-player-foreground hover:bg-player-muted"><SkipBack /></Button>
+          <Button size="icon" variant="ghost" onClick={() => skip(-10)} aria-label={tf("Reculer de 10 secondes")} className="text-player-foreground hover:bg-player-muted"><RotateCcw /></Button>
+          <Button size="icon" variant="ghost" onClick={() => { setPlaying(!playing); setStarted(true); }} aria-label={playing ? tf("Pause") : tf("Lecture")} className="text-player-foreground hover:bg-player-muted">{playing ? <Pause /> : <Play />}</Button>
+          <Button size="icon" variant="ghost" onClick={() => skip(10)} aria-label={tf("Avancer de 10 secondes")} className="text-player-foreground hover:bg-player-muted"><RotateCw /></Button>
+          <Button size="icon" variant="ghost" onClick={() => goTo(index + 1)} aria-label={tf("Scène suivante")} className="text-player-foreground hover:bg-player-muted"><SkipForward /></Button>
+          <Button size="icon" variant="ghost" onClick={() => { setMuted(!muted); if (audioRef.current) audioRef.current.muted = !muted; }} aria-label={muted ? tf("Activer le son") : tf("Couper le son")} className="text-player-foreground hover:bg-player-muted">{muted ? <VolumeX /> : <Volume2 />}</Button>
           <span className="text-xs tabular-nums">{fmt(current)} / {fmt(total)}</span>
-          <span className="ml-auto hidden text-xs font-semibold sm:inline">Scène {index + 1} / {scenes.length}</span>
-          <Button size="sm" variant="ghost" onClick={() => setRate(rate === 0.75 ? 1 : rate === 1 ? 1.25 : rate === 1.25 ? 1.5 : 0.75)} aria-label={`Vitesse de lecture ${rate}×, cliquer pour changer`} className="min-w-12 rounded-full px-2 text-xs font-bold tabular-nums text-player-foreground hover:bg-player-muted">{rate}×</Button>
-          <Button size="icon" variant="ghost" aria-label="Plein écran" onClick={() => containerRef.current?.requestFullscreen?.()} className="text-player-foreground hover:bg-player-muted"><Maximize2 /></Button>
+          <span className="ml-auto hidden text-xs font-semibold sm:inline">{tf("Scène")}{" "}{index + 1} / {scenes.length}</span>
+          <Button size="sm" variant="ghost" onClick={() => setRate(rate === 0.75 ? 1 : rate === 1 ? 1.25 : rate === 1.25 ? 1.5 : 0.75)} aria-label={tf("Vitesse de lecture {0}×, cliquer pour changer", [rate])} className="min-w-12 rounded-full px-2 text-xs font-bold tabular-nums text-player-foreground hover:bg-player-muted">{rate}×</Button>
+          <Button size="icon" variant="ghost" aria-label={full ? tf("Quitter le plein écran") : tf("Plein écran")} onClick={() => setFull((v) => !v)} className="text-player-foreground hover:bg-player-muted">{full ? <Minimize2 /> : <Maximize2 />}</Button>
         </div>
       </div>
 

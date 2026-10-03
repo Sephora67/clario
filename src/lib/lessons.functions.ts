@@ -5,6 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { LessonContent } from "@/lib/lesson-types";
 import { PROCEDURAL_ICON_CATALOG } from "./procedural-icon-catalog";
 import { hasDistinctProceduralGraphic } from "./procedural-icon-renderer";
+import { synthesizeGemini } from "./gemini-tts.server";
 
 const GATEWAY = "https://ai.gateway.lovable.dev";
 
@@ -256,18 +257,8 @@ export const generateSceneMedia = createServerFn({ method: "POST" })
 
     const audioPromise = (async () => {
       if (scene.audio) return scene.audio;
-      const res = await fetch(`${GATEWAY}/v1/audio/speech`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "google/gemini-3.1-flash-tts-preview",
-          contents: [{ role: "user", parts: [{ text: `Dis ceci en français québécois, d'un ton chaleureux et clair de professeure : ${scene.narration}` }] }],
-          generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } } },
-          stream_format: "audio",
-        }),
-      });
-      if (!res.ok) throw await gatewayError(res);
-      const bytes = new Uint8Array(await res.arrayBuffer());
+      // Voix Gemini Kore en direct via la clé Google AI Studio — aucun crédit Lovable.
+      const bytes = await synthesizeGemini(scene.narration);
       const path = `${base}.wav`;
       const up = await supabase.storage.from("lesson-media").upload(path, bytes, { contentType: "audio/wav", upsert: true });
       if (up.error) throw new Error("Impossible d'enregistrer la voix.");

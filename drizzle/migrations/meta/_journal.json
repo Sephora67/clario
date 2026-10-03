@@ -43,6 +43,118 @@
       "when": 1790388942346,
       "tag": "0005_illustration_visual_description",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790641959459,
+      "tag": "0006_clario_study_workspace",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790649614952,
+      "tag": "0007_create_animations",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790696145768,
+      "tag": "0008_folder_parent",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790716679782,
+      "tag": "0009_doc_chats",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790725926838,
+      "tag": "0010_create_support_messages",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790882941366,
+      "tag": "0011_profile_avatar_locale",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790946705353,
+      "tag": "0012_credits_and_payments",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790952712807,
+      "tag": "0013_club_monthly_caps",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790971265015,
+      "tag": "0014_club_max_plan",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1790972844941,
+      "tag": "0015_page_quizzes_and_club_max_caps",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1790972997038,
+      "tag": "0016_lock_quiz_writes",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790980353263,
+      "tag": "0017_club_max_yearly_plan",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790980410029,
+      "tag": "0018_club_max_yearly_monthly_grants",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790981131514,
+      "tag": "0019_replay_missed_club_max_yearly_purchase",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1790989404287,
+      "tag": "0020_add_support_role",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1790989420049,
+      "tag": "0021_admin_credit_adjustments",
+      "breakpoints": true
     }
   ]
 }
